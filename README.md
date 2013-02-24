@@ -2,6 +2,10 @@
 
 This module is basically functional.
 
+Tested with Travis CI
+
+[![Build Status](https://travis-ci.org/sensu/sensu-puppet.png)](https://travis-ci.org/sensu/sensu-puppet)
+
 ## Installation
 
 $ puppet module install sensu/sensu
