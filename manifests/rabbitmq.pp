@@ -6,14 +6,15 @@
 #
 
 class sensu::rabbitmq(
-                    $ssl_cert_chain,
-                    $ssl_private_key,
-                    $port = '5671',
-                    $host = 'localhost',
-                    $user = 'sensu',
-                    $password,
-                    $vhost = '/sensu',
-                    $notify_services
+  $ssl_cert_chain       = '',
+  $ssl_private_key      = '',
+  $port                 = '5671',
+  $host                 = 'localhost',
+  $user                 = 'sensu',
+  $password             = '',
+  $vhost                = '/sensu',
+  $notify_services      = '',
+  $purge_config         = 'false',
   ) {
 
   if !defined(Sensu_rabbitmq_config[$::fqdn]) {
@@ -64,6 +65,10 @@ class sensu::rabbitmq(
           ssl_private_key => $ssl_private_key,
         }
       }
+    }
+
+    if $purge_config {
+      file { '/etc/sensu/conf.d/rabbitmq.json': before => sensu_rabbitmq_config[$::fqdn] }
     }
 
     sensu_rabbitmq_config { $::fqdn:

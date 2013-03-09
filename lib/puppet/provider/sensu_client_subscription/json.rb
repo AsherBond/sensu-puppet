@@ -28,8 +28,16 @@ Puppet::Type.type(:sensu_client_subscription).provide(:json) do
     @conf = nil
   end
 
+  def subscriptions
+    @conf['client']['subscriptions']
+  end
+
+  def subscriptions=(value)
+    @conf['client']['subscriptions'] = value
+  end
+
   def exists?
-    @conf.has_key? 'subscription'
+    @conf.has_key?('client') && @conf['client'].has_key?('subscriptions')
   end
 end
 
