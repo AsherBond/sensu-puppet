@@ -1,4 +1,4 @@
-require 'rubygems' if RUBY_VERSION < '1.9.0' && Puppet.features.rubygems?
+require 'rubygems' if RUBY_VERSION < '1.9.0' && Puppet.version < '3'
 require 'json' if Puppet.features.json?
 
 Puppet::Type.type(:sensu_check).provide(:json) do
@@ -139,7 +139,7 @@ Puppet::Type.type(:sensu_check).provide(:json) do
   end
 
   def refresh
-    conf['checks'][resource[:name]]['refresh']
+    conf['checks'][resource[:name]]['refresh'].to_s
   end
 
   def refresh=(value)
