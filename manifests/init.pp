@@ -48,6 +48,11 @@
 #   Default: true
 #   Valid values: true, false
 #
+# [*manage_user*]
+#   Boolean.  Manage the sensu user with puppet
+#   Default: true
+#   Valid values: true, false
+#
 # [*rabbitmq_port*]
 #   Integer.  Rabbitmq port to be used by sensu
 #   Default: 5671
@@ -91,8 +96,16 @@
 #   Default: localhost
 #
 # [*api_port*]
-#   Integer.  Port of the sensu api service
+#   Integer. Port of the sensu api service
 #   Default: 4567
+#
+# [*api_user*]
+#   String.  Password of the sensu api service
+#   Default: undef
+#
+# [*api_password*]
+#   Integer. Password of the sensu api service
+#   Default: undef
 #
 # [*dashboard_host*]
 #   String.  Hostname of the dahsboard host
@@ -164,6 +177,7 @@ class sensu (
   $api                      = false,
   $dashboard                = false,
   $manage_services          = true,
+  $manage_user              = true,
   $rabbitmq_port            = 5671,
   $rabbitmq_host            = 'localhost',
   $rabbitmq_user            = 'sensu',
@@ -175,6 +189,8 @@ class sensu (
   $redis_port               = 6379,
   $api_host                 = 'localhost',
   $api_port                 = 4567,
+  $api_user                 = undef,
+  $api_password             = undef,
   $dashboard_host           = $::ipaddress,
   $dashboard_port           = 8080,
   $dashboard_user           = 'admin',
