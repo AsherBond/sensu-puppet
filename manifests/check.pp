@@ -28,6 +28,12 @@
 #   Integer.  How frequently (in seconds) the check will be executed
 #   Default: 60
 #
+# [*occurrences*]
+#   Integer.  The number of event occurrences before the handler should take action.
+#
+# [*refresh*]
+#   Integer.  The number of seconds sensu-plugin-aware handlers should wait before taking second action.
+#
 # [*subscribers*]
 #   Array of Strings.  Which subscriptions must execute this check
 #   Default: []
@@ -69,6 +75,8 @@ define sensu::check(
   $handlers            = undef,
   $standalone          = true,
   $interval            = 60,
+  $occurrences         = undef,
+  $refresh             = undef,
   $subscribers         = [],
   $low_flap_threshold  = undef,
   $high_flap_threshold = undef,
@@ -85,6 +93,12 @@ define sensu::check(
   if !is_integer($interval) {
     fail("sensu::check{${name}}: interval must be an integer (got: ${interval})")
   }
+  if $occurrences and !is_integer($occurrences) {
+    fail("sensu::check{${name}}: occurrences must be an integer (got: ${occurrences})")
+  }
+  if $refresh and !is_integer($refresh) {
+    fail("sensu::check{${name}}: refresh must be an integer (got: ${refresh})")
+  }
   if $low_flap_threshold and !is_integer($low_flap_threshold) {
     fail("sensu::check{${name}}: low_flap_threshold must be an integer (got: ${low_flap_threshold})")
   }
@@ -93,18 +107,6 @@ define sensu::check(
   }
   if $timeout and !is_numeric($timeout) {
     fail("sensu::check{${name}}: timeout must be a numeric (got: ${timeout})")
-  }
-
-  if $client {
-    if $server {
-
-    } else {
-      $notify = Class['sensu::client::service']
-    }
-  } elsif $server {
-    $notify = Class['sensu::client::service']
-  } else {
-    $notify = []
   }
 
   $check_name = regsubst(regsubst($name, ' ', '_', 'G'), '[\(\)]', '', 'G')
@@ -124,6 +126,8 @@ define sensu::check(
     command             => $command,
     handlers            => $handlers,
     interval            => $interval,
+    occurrences         => $occurrences,
+    refresh             => $refresh,
     subscribers         => $subscribers,
     low_flap_threshold  => $low_flap_threshold,
     high_flap_threshold => $high_flap_threshold,
