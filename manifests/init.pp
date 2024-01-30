@@ -1,251 +1,155 @@
-# = Class: sensu
+# @summary Base Sensu class
 #
-# Base Sensu class
+# This is the main Sensu class
 #
-# == Parameters
+# @param version
+#   Version of Sensu to install.  Defaults to `installed` to support
+#   Windows MSI packaging and to avoid surprising upgrades.
 #
-# [*version*]
-#   String.  Version of sensu to install
-#   Default: latest
-#   Valid values: absent, installed, latest, present, [\d\.\-]+
+# @param etc_dir
+#   Absolute path to the Sensu etc directory.
 #
-# [*sensu_plugin_version*]
-#   String.  Version of the sensu-plugin gem to install
-#   Default: absent
-#   Valid values: absent, installed, latest, present, [\d\.\-]+
+# @param ssl_dir
+#   Absolute path to the Sensu ssl directory.
 #
-# [*install_repo*]
-#   Boolean.  Whether or not to install the sensu repo
-#   Default: true
-#   Valid values: true, false
+# @param manage_user
+#   Boolean that determines if sensu user should be managed
 #
-# [*repo*]
-#   String.  Which sensu repo to install
-#   Default: main
-#   Valid values: main, unstable
+# @param user
+#   User used by sensu services
 #
-# [*repo_source*]
-#   String.  Location of the yum/apt repo.  Overrides the default location
-#   Default: undef
-
-# [*repo_key_id*]
-#   String.  The apt GPG key id
-#   Default: 7580C77F
+# @param manage_group
+#   Boolean that determines if sensu group should be managed
 #
-# [*repo_key_source*]
-#   String.  URL of the apt GPG key
-#   Default: http://repos.sensuapp.org/apt/pubkey.gpg
+# @param group
+#   User group used by sensu services
 #
-# [*client*]
-#   Boolean.  Include the sensu client
-#   Default: true
-#   Valid values: true, false
+# @param etc_dir_purge
+#   Boolean to determine if the etc_dir should be purged
+#   such that only Puppet managed files are present.
 #
-# [*server*]
-#   Boolean.  Include the sensu server
-#   Default: false
-#   Valid values: true, false
+# @param ssl_dir_purge
+#   Boolean to determine if the ssl_dir should be purged
+#   such that only Puppet managed files are present.
 #
-# [*api*]
-#   Boolean.  Include the sensu api service
-#   Default: false
-#   Valid values: true, false
+# @param manage_repo
+#   Boolean to determine if software repository for Sensu
+#   should be managed.
 #
-# [*manage_services*]
-#   Boolean.  Manage the sensu services with puppet
-#   Default: true
-#   Valid values: true, false
+# @param use_ssl
+#   Sensu backend service uses SSL
 #
-# [*manage_user*]
-#   Boolean.  Manage the sensu user with puppet
-#   Default: true
-#   Valid values: true, false
+# @param ssl_ca_source
+#   Source of SSL CA used by sensu services
+#   This parameter is mutually exclusive with ssl_ca_content
 #
-# [*rabbitmq_port*]
-#   Integer.  Rabbitmq port to be used by sensu
-#   Default: 5672
+# @param ssl_ca_content
+#   Content of SSL CA used by sensu services
+#   This parameter is mutually exclusive with ssl_ca_source
 #
-# [*rabbitmq_host*]
-#   String.  Host running rabbitmq for sensu
-#   Default: 'localhost'
-#
-# [*rabbitmq_user*]
-#   String.  Username to connect to rabbitmq with for sensu
-#   Default: 'sensu'
-#
-# [*rabbitmq_password*]
-#   String.  Password to connect to rabbitmq with for sensu
-#   Default: ''
-#
-# [*rabbitmq_vhost*]
-#   String.  Rabbitmq vhost to be used by sensu
-#   Default: 'sensu'
-#
-# [*rabbitmq_ssl_private_key*]
-#   String.  Private key to be used by sensu to connect to rabbitmq
-#     If the value starts with 'puppet://' the file will be copied and used.  Absolute paths will just be used
-#   Default: undef
-#
-# [*rabbitmq_ssl_cert_chain*]
-#   String.  Private SSL cert chain to be used by sensu to connect to rabbitmq
-#     If the value starts with 'puppet://' the file will be copied and used.  Absolute paths will just be used
-#   Default: undef
-#
-# [*redis_host*]
-#   String.  Hostname of redis to be used by sensu
-#   Default: localhost
-#
-# [*redis_port*]
-#   Integer.  Redis port to be used by sensu
-#   Default: 6379
-#
-# [*api_bind*]
-#   String.  IP to bind api service
-#   Default: 0.0.0.0
-# [*api_host*]
-#   String.  Hostname of the sensu api service
-#   Default: localhost
-#
-# [*api_port*]
-#   Integer. Port of the sensu api service
-#   Default: 4567
-#
-# [*api_user*]
-#   String.  Password of the sensu api service
-#   Default: undef
-#
-# [*api_password*]
-#   Integer. Password of the sensu api service
-#   Default: undef
-#
-# [*subscriptions*]
-#   Array of strings.  Default suscriptions used by the client
-#   Default: []
-#
-# [*client_address*]
-#   String.  Address of the client to report with checks
-#   Default: $::ipaddress
-#
-# [*client_name*]
-#   String.  Name of the client to report with checks
-#   Default: $::fqdn
-#
-# [*client_custom*]
-#   Hash.  Custom client variables
-#   Default: {}
-#
-# [*safe_mode*]
-#   Boolean.  Force safe mode for checks
-#   Default: false
-#   Valid values: true, false
-#
-# [*plugins*]
-#   String, Array of Strings.  Plugins to install on the node
-#   Default: []
-#
-# [*purge_config*]
-#   Boolean.  If unused configs should be removed from the system
-#   Default: false
-#   Valid values: true, false
-#
-# [*use_embedded_ruby*]
-#   Boolean.  If the embedded ruby should be used
-#   Default: false
-#   Valid values: true, false
-#
-# [*rubyopt*]
-#   String.  Ruby opts to be passed to the sensu services
-#   Default: ''
-#
-# [*log_level*]
-#   String.  Sensu log level to be used
-#   Default: 'info'
-#   Valid values: debug, info, warn, error, fatal
-#
+# @param api_host
+#   Sensu backend host used to configure sensuctl and verify API access.
+# @param api_port
+#   Sensu backend port used to configure sensuctl and verify API access.
+# @param password
+#   Sensu backend admin password used to confiure sensuctl.
+# @param agent_password
+#   The sensu agent password
+# @param agent_entity_config_password
+#   The password used when configuring Sensu Agent entity config items
+#   Defaults to value used for `agent_password`.
+# @param validate_namespaces
+#   Determines if sensuctl and sensu_api types will validate their namespace exists
+# @param validate_api
+#   Determines if Sensu API is validated
 class sensu (
-  $version                  = 'latest',
-  $sensu_plugin_version     = 'absent',
-  $install_repo             = true,
-  $repo                     = 'main',
-  $repo_source              = undef,
-  $repo_key_id              = '7580C77F',
-  $repo_key_source          = 'http://repos.sensuapp.org/apt/pubkey.gpg',
-  $client                   = true,
-  $server                   = false,
-  $api                      = false,
-  $manage_services          = true,
-  $manage_user              = true,
-  $rabbitmq_port            = 5672,
-  $rabbitmq_host            = 'localhost',
-  $rabbitmq_user            = 'sensu',
-  $rabbitmq_password        = '',
-  $rabbitmq_vhost           = 'sensu',
-  $rabbitmq_ssl_private_key = undef,
-  $rabbitmq_ssl_cert_chain  = undef,
-  $redis_host               = 'localhost',
-  $redis_port               = 6379,
-  $api_bind                 = '0.0.0.0',
-  $api_host                 = 'localhost',
-  $api_port                 = 4567,
-  $api_user                 = undef,
-  $api_password             = undef,
-  $subscriptions            = [],
-  $client_bind              = '127.0.0.1',
-  $client_address           = $::ipaddress,
-  $client_name              = $::fqdn,
-  $client_custom            = {},
-  $safe_mode                = false,
-  $plugins                  = [],
-  $purge_config             = false,
-  $use_embedded_ruby        = false,
-  $rubyopt                  = '',
-  $log_level                = 'info',
-){
+  String $version = 'installed',
+  Stdlib::Absolutepath $etc_dir = '/etc/sensu',
+  Stdlib::Absolutepath $ssl_dir = '/etc/sensu/ssl',
+  Boolean $manage_user = true,
+  String $user = 'sensu',
+  Boolean $manage_group = true,
+  String $group = 'sensu',
+  Boolean $etc_dir_purge = true,
+  Boolean $ssl_dir_purge = true,
+  Boolean $manage_repo = true,
+  Boolean $use_ssl = true,
+  Optional[String] $ssl_ca_source = $facts['puppet_localcacert'],
+  Optional[String] $ssl_ca_content = undef,
+  String $api_host = $trusted['certname'],
+  Stdlib::Port $api_port = 8080,
+  String $password = 'P@ssw0rd!',
+  String $agent_password = 'P@ssw0rd!',
+  Optional[String] $agent_entity_config_password = undef,
+  Boolean $validate_namespaces = true,
+  Boolean $validate_api = true,
+) {
 
-  validate_bool($client, $server, $api, $install_repo, $purge_config, $safe_mode, $manage_services)
-
-  validate_re($repo, ['^main$', '^unstable$'], "Repo must be 'main' or 'unstable'.  Found: ${repo}")
-  validate_re($version, ['^absent$', '^installed$', '^latest$', '^present$', '^[\d\.\-]+$'], "Invalid package version: ${version}")
-  validate_re($sensu_plugin_version, ['^absent$', '^installed$', '^latest$', '^present$', '^[\d\.\-]+$'], "Invalid sensu-plugin package version: ${sensu_plugin_version}")
-  validate_re($log_level, ['^debug$', '^info$', '^warn$', '^error$', '^fatal$'] )
-  if !is_integer($rabbitmq_port) { fail('rabbitmq_port must be an integer') }
-  if !is_integer($redis_port) { fail('redis_port must be an integer') }
-  if !is_integer($api_port) { fail('api_port must be an integer') }
-
-  # Ugly hack for notifications, better way?
-  # Put here to avoid computing the conditionals for every check
-  if $client and $server and $api {
-    $check_notify = [ Class['sensu::client::service'], Class['sensu::server::service'], Class['sensu::api::service'] ]
-  } elsif $client and $server {
-    $check_notify = [ Class['sensu::client::service'], Class['sensu::server::service'] ]
-  } elsif $client and $api {
-    $check_notify = [ Class['sensu::client::service'], Class['sensu::api::service'] ]
-  } elsif $server and $api {
-    $check_notify = [ Class['sensu::server::service'], Class['sensu::api::service'] ]
-  } elsif $server {
-    $check_notify = Class['sensu::server::service']
-  } elsif $client {
-    $check_notify = Class['sensu::client::service']
-  } elsif $api {
-    $check_notify = Class['sensu::api::service']
+  if $ssl_ca_content {
+    $_ssl_ca_source = undef
   } else {
-    $check_notify = []
+    $_ssl_ca_source = $ssl_ca_source
+  }
+  if $use_ssl and !($_ssl_ca_source or $ssl_ca_content) {
+    fail('sensu: ssl_ca_source or ssl_ca_content must be defined when use_ssl is true')
   }
 
+  if $facts['os']['family'] == 'windows' {
+    # dirname can not handle back slashes so convert to forward slash then back to back slash
+    $etc_dir_fixed = regsubst($etc_dir, '\\\\', '/', 'G')
+    $etc_parent_dirname = dirname($etc_dir_fixed)
+    $etc_parent_dir = regsubst($etc_parent_dirname, '/', '\\\\', 'G')
+    $sensu_user = undef
+    $sensu_group = undef
+    $directory_mode = undef
+    $file_mode = undef
+    $trusted_ca_file_path = "${ssl_dir}\\ca.crt"
+    $agent_config_path = "${etc_dir}\\agent.yml"
+  } else {
+    $etc_parent_dir = undef
+    $sensu_user = $user
+    $sensu_group = $group
+    $directory_mode = '0755'
+    $file_mode = '0640'
+    $join_path = '/'
+    $trusted_ca_file_path = "${ssl_dir}/ca.crt"
+    $agent_config_path = "${etc_dir}/agent.yml"
+  }
 
-  # Include everything and let each module determine its state.  This allows
-  # transitioning to purged config and stopping/disabling services
-  anchor { 'sensu::begin': } ->
-  class { 'sensu::package': } ->
-  class { 'sensu::rabbitmq::config': } ->
-  class { 'sensu::api::config': } ->
-  class { 'sensu::redis::config': } ->
-  class { 'sensu::client::config': } ->
-  class { 'sensu::client::service': } ->
-  class { 'sensu::api::service': } ->
-  class { 'sensu::server::service': } ->
-  anchor {'sensu::end': }
+  if $use_ssl {
+    $api_protocol = 'https'
+    $trusted_ca_file = $trusted_ca_file_path
+  } else {
+    $api_protocol = 'http'
+    $trusted_ca_file = 'absent'
+  }
+  $api_url = "${api_protocol}://${api_host}:${api_port}"
 
-  sensu::plugin { $plugins: install_path => '/etc/sensu/plugins'}
+  $_agent_entity_config_password = pick($agent_entity_config_password, $agent_password)
+
+  case $facts['os']['family'] {
+    'RedHat': {
+      $os_package_require = []
+    }
+    'Debian': {
+      $os_package_require = [Class['apt::update']]
+    }
+    'windows': {
+      $os_package_require = []
+    }
+    default: {
+      fail("Detected osfamily <${facts['os']['family']}>. Only RedHat, Debian and Windows are supported.")
+    }
+  }
+
+  # $package_require is used by sensu::agent and sensu::backend
+  # package resources
+  if $manage_repo {
+    $package_require = [Class['sensu::repo']] + $os_package_require
+  } else {
+    $package_require = undef
+  }
+
+  include sensu::resources
 
 }

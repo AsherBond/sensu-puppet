@@ -1,0 +1,18 @@
+{
+  "description": "Generate targets from Sensu Go",
+  "input_method": "stdin",
+  "parameters": {
+    "namespace": {
+      "description": "Namespace to pull entities from",
+      "type": "Optional[String[1]]"
+    },
+    "subscription": {
+      "description": "Find entities with this subscription",
+      "type": "Optional[String[1]]"
+    },
+    "interface_list": {
+      "description": "Interfaces to search if more than one present",
+      "type": "Optional[Array]"
+    }
+  }
+}

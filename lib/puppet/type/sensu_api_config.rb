@@ -1,62 +1,53 @@
+require_relative '../../puppet_x/sensu/type'
+require_relative '../../puppet_x/sensu/array_property'
+require_relative '../../puppet_x/sensu/hash_property'
+require_relative '../../puppet_x/sensu/integer_property'
+
 Puppet::Type.newtype(:sensu_api_config) do
-  @doc = ""
+  desc <<-DESC
+@summary Abstract type to configure other types
+**NOTE** This is a private type not intended to be used directly.
+DESC
 
-  def initialize(*args)
-    super
-
-    self[:notify] = [
-      "Service[sensu-api]",
-    ].select { |ref| catalog.resource(ref) }
+  newparam(:name, :namevar => true) do
+    desc "The name of the resource."
   end
 
-  ensurable do
-    newvalue(:present) do
-      provider.create
+  newparam(:url) do
+    desc "Sensu API URL"
+  end
+
+  newparam(:username) do
+    desc "Sensu API username"
+  end
+
+  newparam(:password) do
+    desc "Sensu API password"
+  end
+
+  newparam(:validate_namespaces, :boolean => true) do
+    desc "Determines of namespaces should be validated with Sensu API"
+    newvalues(:true, :false)
+    defaultto(:true)
+  end
+
+  # First collect all types with sensu_api provider that come from this module
+  # For each sensu_api type, set the class variable 'chunk_size' used by
+  # each provider to list resources
+  # Return empty array since we are not actually generating resources
+  def generate
+    sensu_api_types = []
+    Dir[File.join(File.dirname(__FILE__), '../provider/sensu_*/sensu_api.rb')].each do |file|
+      type = File.basename(File.dirname(file))
+      sensu_api_types << type.to_sym
     end
-
-    newvalue(:absent) do
-      provider.destroy
+    sensu_api_types.each do |type|
+      provider_class = Puppet::Type.type(type).provider(:sensu_api)
+      provider_class.url = self[:url]
+      provider_class.username = self[:username]
+      provider_class.password = self[:password]
+      provider_class.validate_namespaces = self[:validate_namespaces]
     end
-
-    defaultto :present
-  end
-
-  newparam(:name) do
-    desc "This value has no effect, set it to what ever you want."
-  end
-
-  newproperty(:port) do
-    desc "The port that the Sensu API is listening on"
-
-    defaultto '4567'
-  end
-
-  newproperty(:host) do
-    desc "The hostname that the Sensu API is listening on"
-
-    defaultto 'localhost'
-  end
-
-  newproperty(:bind) do
-    desc "The bind IP that sensu will bind to"
-
-    defaultto '0.0.0.0'
-  end
-
-  newparam(:base_path) do
-    desc "The base path to the client config file"
-    defaultto '/etc/sensu/conf.d/'
-  end
-
-  newproperty(:user) do
-    desc "The username used for clients to authenticate against the Sensu API"
-  end
-
-  newproperty(:password) do
-    desc "The password use for client authentication against the Sensu API"
-  end
-
-  autorequire(:package) do
-    ['sensu']
+    []
   end
 end
